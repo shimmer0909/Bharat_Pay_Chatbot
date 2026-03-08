@@ -8,7 +8,8 @@ from qdrant_client.models import ScoredPoint
 from models.embedding import generate_embedding  # your existing embedding function
 # from vector_db.qdrant_store import client, COLLECTION_NAME, generate_embedding, PointStruct
 import traceback
-from models.llm import generate_answer
+# from models.llm import generate_answer
+from models.llm import generate_response
 
 # -----------------------------
 # FastAPI app
@@ -22,10 +23,54 @@ COLLECTION_NAME = "document_chunks"
 client = QdrantClient(host="localhost", port=6333)
 
 # -----------------------------
+# Role Contexts
+# -----------------------------
+ROLE_CONTEXT = {
+
+    "product": """
+You are assisting a Product Lead at BharatPay.
+
+Focus on:
+- merchant impact
+- user experience
+- product opportunities
+- payment features
+
+Explain how the information affects product strategy.
+""",
+
+    "tech": """
+You are assisting a Tech Lead at BharatPay.
+
+Focus on:
+- APIs
+- system architecture
+- integrations
+- technical implementation
+
+Explain engineering implications.
+""",
+
+    "compliance": """
+You are assisting a Compliance Lead at BharatPay.
+
+Focus on:
+- RBI guidelines
+- NPCI circulars
+- regulatory obligations
+- compliance risks
+
+Highlight policy and regulatory impact.
+"""
+}
+
+
+# -----------------------------
 # Request & Response Models
 # -----------------------------
 class QueryRequest(BaseModel):
     query: str
+    role: str
     top_k: int = 5
 
 class QueryResult(BaseModel):
@@ -55,9 +100,9 @@ def semantic_search(query: str, top_k: int = 5) -> List[dict]:
 
     return [
         {
-            "id": point.id,
+            "id": str(point.id),
             "score": point.score,
-            "text": point.payload.get("text")
+            "text": point.payload.get("text", "")
         }
         for point in results.points
     ]
@@ -89,21 +134,38 @@ def answer_query_endpoint(req: QueryRequest):
 
         # Step 2: Combine chunks as context
         context = "\n\n".join([c["text"] for c in chunks])
-        context = context[:3000]  # limit to first 3000 chars
+        context = context[:1500]  # limit to first 3000 chars
 
-        # Step 3: Create prompt for LLM
+        # Step 3: Role conditioning
+        role_prompt = ROLE_CONTEXT.get(
+            req.role.lower(),
+            "You are a financial intelligence assistant."
+        )
+
+        # Step 4: Create prompt for LLM
         prompt = f"""
-You are an expert assistant. Answer the question based only on the following context.
-Context: {context}
+You are a financial regulatory assistant.
 
-Question: {req.query}
-Answer concisely and clearly. Provide actionable or numeric details if present in the context.
+Role perspective:
+{role_prompt}
+
+Use ONLY the context below.
+
+Context:
+{context}
+
+Question:
+{req.query}
+
+Provide a detailed answer in bullet points.
+Mention relevant RBI or NPCI circulars if present.
 """
 
-        # Step 4: Generate answer
-        answer = generate_answer(prompt)
+        # Step 5: Generate answer
+        # answer = generate_answer(prompt)
+        answer = generate_response(prompt)
 
-        # Step 5: Return answer + sources
+        # Step 6: Return answer + sources
         return {"answer": answer, "sources": chunks}
 
     except Exception as e:

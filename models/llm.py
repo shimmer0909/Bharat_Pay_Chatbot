@@ -1,4 +1,28 @@
 # models/llm.py
+
+import ollama
+
+def generate_response(prompt: str):
+
+    response = ollama.chat(
+        # model="mistral",  # Responds in ~75 secs
+        # model="llama3.2:3b",  # Responds in ~85 secs
+        model="phi3:mini",  # Response in ~70 secs
+        messages=[
+            {
+                "role": "user",
+                "content": prompt
+            }
+        ],
+        options={
+            "num_predict": 150
+        },
+        stream=True
+    )
+
+    return response["message"]["content"]
+
+
 # import openai
 # import os
 
@@ -22,17 +46,21 @@
     # return response.choices[0].message.content.strip()
 
 
-from llama_cpp import Llama
-import os
+# from transformers import pipeline
 
-# path to your downloaded model
-LLAMA_MODEL_PATH = "./models/vicuna-7B-q4_0.bin"
+# # load once at startup
+# generator = pipeline(
+#     "text2text-generation",
+#     model="google/flan-t5-base",
+#     max_length=512
+# )
 
-llm = Llama(model_path=LLAMA_MODEL_PATH)
+# def generate_response(prompt: str):
+#     result = generator(
+#         prompt,
+#         max_new_tokens=200,
+#         do_sample=True,
+#         temperature=0.3
+#     )
+#     return result[0]["generated_text"]
 
-def generate_answer(prompt: str, max_tokens: int = 300) -> str:
-    """
-    Generate response from a local LLM using llama_cpp
-    """
-    response = llm(prompt, max_tokens=max_tokens)
-    return response["choices"][0]["text"].strip()
