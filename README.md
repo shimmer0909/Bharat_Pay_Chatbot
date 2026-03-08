@@ -21,7 +21,7 @@ This project demonstrates a complete AI pipeline — from web scraping and docum
 ## 🧰 Tech Stack
 
 ```text
-Component	        Technology
+COMPONENT	        TECHNOLOGY
 Backend API	        FastAPI
 Vector Database	    Qdrant
 Embeddings	        Sentence Transformers
