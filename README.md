@@ -4,6 +4,10 @@ End-to-end prototype intelligent chatbot for processing internal documents and e
 
 This project demonstrates a complete AI pipeline — from web scraping and document ingestion to vector search and chatbot query response.
 
+# Sample Outputs
+
+[Chat Bot Output Sheet](https://docs.google.com/spreadsheets/d/1XVDtkMQZLuCAdWD93FwEolFc2ChWezqZ8V86u1ZkCw8/edit?usp=sharing)
+
 ## 📌 Project Highlights
 
 - 📰 Web scraping of NPCI UPI circulars & RBI ATM data
